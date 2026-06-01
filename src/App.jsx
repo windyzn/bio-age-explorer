@@ -145,7 +145,7 @@ function computeSystemScore(sys, markers) {
 // ─── Biological age formula ───────────────────────────────────────────────────
 // Asymmetric: penalty for below-median is felt quickly (exponent < 1),
 // benefit for above-median is earned slowly (exponent > 1).
-const MAX_DELTA = 20;
+const MAX_DELTA = 15;
 
 function computeBioAge(overall, age, median) {
     if (overall == null || age == null || median == null) return null;
@@ -371,7 +371,7 @@ export default function App() {
                 )}
             </div>
 
-            <div style={{ padding: "40px 32px 64px", maxWidth: 1200 }}>
+            <div style={{ padding: "40px 32px 64px", maxWidth: 1200, margin: "0 auto" }}>
                 {loading ? (
                     <Spinner />
                 ) : !clients ? (
@@ -433,8 +433,8 @@ export default function App() {
                         }}>
                             <strong style={{ color: C.textSecond }}>Formula:</strong>{" "}
                             biological age = chronological age + δ, where δ is derived from how far the individual's overall score deviates from the population median.
-                            Penalty (below median): δ = +20 · x<sup>0.75</sup> — felt quickly.
-                            Benefit (above median): δ = −20 · x<sup>1.5</sup> — earned slowly.
+                            Penalty (below median): δ = +15 · x<sup>0.75</sup> — felt quickly.
+                            Benefit (above median): δ = −15 · x<sup>1.5</sup> — earned slowly.
                             x is the normalised distance from the median (0 → 1).
                         </div>
 
@@ -474,7 +474,7 @@ export default function App() {
                                                 <td style={{ padding: "10px 8px", textAlign: "center" }}>
                                                     <input
                                                         type="number"
-                                                        min="1" max="120"
+                                                        min="18" max="120"
                                                         placeholder="—"
                                                         value={ages[client.id] ?? ""}
                                                         onChange={e => setAges(prev => ({ ...prev, [client.id]: e.target.value }))}
