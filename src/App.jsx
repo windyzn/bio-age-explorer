@@ -2,13 +2,14 @@ import { useState, useMemo, useCallback, useRef } from "react";
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
 const C = {
-    navy: "#18374B", navyMid: "#3B5464", steel: "#61859D", teal: "#8CCFCF",
-    iceLight: "#D5E6EE", iceMid: "#B8CCD4", white: "#F6FCFF", surface: "#FFFFFF",
-    border: "#D5E6EE", textPrimary: "#18374B", textSecond: "#3B5464",
-    textMuted: "#61859D", textFaint: "#8CAABB",
-    green: "#658385", fair: "#C4956A", critical: "#B07070", tealDark: "#4DA8A8",
+    bg: "#FFFFFF", surface: "#FFFFFF", surfaceAlt: "#F9FAFB",
+    border: "#E5E7EB", borderLight: "#F3F4F6",
+    textPrimary: "#111827", textSecond: "#374151", textMuted: "#6B7280", textFaint: "#9CA3AF",
+    good: "#16A34A", fair: "#D97706", critical: "#DC2626",
+    goodBg: "#F0FDF4", fairBg: "#FFFBEB", criticalBg: "#FEF2F2",
+    goodBorder: "#BBF7D0", fairBorder: "#FDE68A", criticalBorder: "#FECACA",
 };
-const T = { display: "'Georgia',serif", body: "'Trebuchet MS','Segoe UI',sans-serif", mono: "'Courier New',monospace" };
+const T = { body: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", mono: "'SF Mono','Fira Mono','Courier New',monospace" };
 
 // ─── Health systems (body systems only) ──────────────────────────────────────
 const SYSTEMS = [
@@ -225,16 +226,15 @@ function buildClients(rows) {
 // ─── UI helpers ───────────────────────────────────────────────────────────────
 function scoreColour(s) {
     if (s == null) return C.textFaint;
-    const f = Math.floor(s);
-    if (f >= 91) return C.tealDark;
-    if (f >= 70) return C.fair;
+    if (Math.floor(s) >= 91) return C.good;
+    if (Math.floor(s) >= 70) return C.fair;
     return C.critical;
 }
 
 function ScoreBar({ score, width = 60 }) {
     const col = scoreColour(score);
     return (
-        <div style={{ width, height: 4, background: C.iceLight, borderRadius: 2, overflow: "hidden" }}>
+        <div style={{ width, height: 3, background: C.borderLight, borderRadius: 2, overflow: "hidden" }}>
             <div style={{ height: "100%", width: `${score ?? 0}%`, background: col, borderRadius: 2, transition: "width 0.4s" }} />
         </div>
     );
@@ -243,17 +243,30 @@ function ScoreBar({ score, width = 60 }) {
 function DeltaBadge({ delta }) {
     if (delta == null) return null;
     const older = delta > 0;
-    const col = older ? C.critical : C.tealDark;
     const sign = older ? "+" : "";
     return (
         <span style={{
-            display: "inline-block", padding: "2px 8px", borderRadius: 10,
-            background: older ? "#FDF0EE" : "#EAF7F7",
-            color: col, fontFamily: T.mono, fontWeight: 700, fontSize: 12,
-            border: `1px solid ${older ? "#F0D0CC" : "#C0E8E8"}`,
+            display: "inline-block", padding: "2px 8px", borderRadius: 6,
+            background: older ? C.criticalBg : C.goodBg,
+            color: older ? C.critical : C.good,
+            fontFamily: T.mono, fontWeight: 600, fontSize: 11,
+            border: `1px solid ${older ? C.criticalBorder : C.goodBorder}`,
         }}>
             {sign}{delta.toFixed(1)} yrs
         </span>
+    );
+}
+
+function Spinner() {
+    return (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "80px 0", color: C.textMuted, fontSize: 13 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                style={{ animation: "spin 0.8s linear infinite" }}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+            </svg>
+            Processing…
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
     );
 }
 
@@ -275,19 +288,18 @@ function UploadZone({ onFile }) {
             onDragLeave={() => setDrag(false)}
             onDrop={handleDrop}
             style={{
-                border: `2px dashed ${drag ? C.teal : C.iceMid}`,
-                borderRadius: 12, padding: "48px 32px", textAlign: "center",
-                cursor: "pointer", background: drag ? "#EAF7F7" : C.surface,
-                transition: "all 0.2s", maxWidth: 480, margin: "0 auto",
+                border: `1.5px dashed ${drag ? C.textSecond : C.border}`,
+                borderRadius: 10, padding: "48px 32px", textAlign: "center",
+                cursor: "pointer", background: drag ? C.surfaceAlt : C.surface,
+                transition: "all 0.15s", maxWidth: 480, margin: "0 auto",
             }}
         >
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⬆</div>
-            <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, marginBottom: 6 }}>
-                Drop or click to upload a CSV
+            <div style={{ fontSize: 13, fontWeight: 500, color: C.textPrimary, marginBottom: 6 }}>
+                Drop a CSV here or click to browse
             </div>
-            <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
+            <div style={{ fontSize: 12, color: C.textFaint, lineHeight: 1.7 }}>
                 Required columns:<br />
-                <code style={{ fontFamily: T.mono, fontSize: 11 }}>is_reported, my_id, barcode, measure_name, lab_concentration, lower_reference_range, upper_reference_range</code>
+                <span style={{ fontFamily: T.mono, fontSize: 11 }}>is_reported · my_id · barcode · measure_name · lab_concentration · lower_reference_range · upper_reference_range</span>
             </div>
             <input ref={inputRef} type="file" accept=".csv" style={{ display: "none" }}
                 onChange={e => { const f = e.target.files[0]; if (f) onFile(f); }} />
@@ -300,14 +312,17 @@ export default function App() {
     const [clients, setClients] = useState(null);
     const [ages, setAges] = useState({});
     const [fileName, setFileName] = useState(null);
+    const [loading, setLoading] = useState(false);
 
     const handleFile = useCallback((file) => {
         setFileName(file.name);
+        setLoading(true);
         const reader = new FileReader();
         reader.onload = e => {
             const rows = parseCSV(e.target.result);
             setClients(buildClients(rows));
             setAges({});
+            setLoading(false);
         };
         reader.readAsText(file);
     }, []);
@@ -343,33 +358,35 @@ export default function App() {
     const nWithAge = Object.keys(ages).filter(id => ages[id] != null && ages[id] !== "").length;
 
     return (
-        <div style={{ minHeight: "100vh", background: "#EEF4F7" }}>
+        <div style={{ minHeight: "100vh", background: C.bg, fontFamily: T.body, color: C.textPrimary }}>
             {/* Header */}
-            <div style={{ background: C.navy, padding: "18px 32px", display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ fontFamily: T.display, fontSize: 20, color: C.teal, letterSpacing: "0.02em" }}>
+            <div style={{ borderBottom: `1px solid ${C.border}`, padding: "16px 32px", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.01em" }}>
                     Biological Age Explorer
                 </div>
                 {fileName && (
-                    <div style={{ marginLeft: "auto", fontSize: 11, color: C.steel, fontFamily: T.mono }}>
+                    <div style={{ marginLeft: "auto", fontSize: 11, color: C.textFaint, fontFamily: T.mono }}>
                         {fileName}
                     </div>
                 )}
             </div>
 
-            <div style={{ padding: "32px 32px 64px" }}>
-                {!clients ? (
-                    <div style={{ paddingTop: 64 }}>
+            <div style={{ padding: "40px 32px 64px", maxWidth: 1200 }}>
+                {loading ? (
+                    <Spinner />
+                ) : !clients ? (
+                    <div style={{ paddingTop: 80 }}>
                         <div style={{ textAlign: "center", marginBottom: 32 }}>
-                            <div style={{ fontFamily: T.display, fontSize: 22, color: C.navy, marginBottom: 8 }}>
+                            <div style={{ fontSize: 20, fontWeight: 600, marginBottom: 8 }}>
                                 Load data to begin
                             </div>
-                            <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 420, margin: "0 auto" }}>
+                            <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 400, margin: "0 auto", lineHeight: 1.6 }}>
                                 Scores are computed across 7 body health systems.
                                 Biological age is derived from each individual's overall score relative to the population median.
                             </div>
                         </div>
                         <UploadZone onFile={handleFile} />
-                        <div style={{ textAlign: "center", marginTop: 24, fontSize: 12, color: C.textFaint }}>
+                        <div style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: C.textFaint }}>
                             All data stays in your browser — nothing is uploaded to a server.
                         </div>
                     </div>
@@ -377,11 +394,11 @@ export default function App() {
                     <>
                         {/* Stats bar */}
                         <div style={{
-                            display: "flex", gap: 24, marginBottom: 24,
-                            background: C.surface, borderRadius: 10, padding: "16px 24px",
+                            display: "flex", gap: 24, marginBottom: 20,
+                            background: C.surfaceAlt, borderRadius: 8, padding: "14px 20px",
                             border: `1px solid ${C.border}`, flexWrap: "wrap", alignItems: "center",
                         }}>
-                            <Stat label="Clients" value={n} />
+                            <Stat label="Individuals" value={n} />
                             <Divider />
                             <Stat label="Population median score" value={populationMedian != null ? populationMedian.toFixed(1) : "—"} />
                             <Divider />
@@ -389,8 +406,8 @@ export default function App() {
                             {n < 5 && (
                                 <>
                                     <Divider />
-                                    <div style={{ fontSize: 11, color: C.fair, fontStyle: "italic" }}>
-                                        ⚠ Median may not be representative with fewer than 5 clients
+                                    <div style={{ fontSize: 11, color: C.fair }}>
+                                        Median may not be representative with fewer than 5 individuals
                                     </div>
                                 </>
                             )}
@@ -398,7 +415,7 @@ export default function App() {
                                 <button
                                     onClick={() => { setClients(null); setAges({}); setFileName(null); }}
                                     style={{
-                                        fontSize: 11, padding: "5px 12px", borderRadius: 6,
+                                        fontSize: 12, padding: "5px 12px", borderRadius: 6,
                                         border: `1px solid ${C.border}`, background: C.surface,
                                         color: C.textMuted, cursor: "pointer",
                                     }}
@@ -410,23 +427,23 @@ export default function App() {
 
                         {/* Formula note */}
                         <div style={{
-                            background: "#F0F7FB", border: `1px solid ${C.iceLight}`,
-                            borderRadius: 8, padding: "10px 16px", marginBottom: 20,
+                            background: C.surfaceAlt, border: `1px solid ${C.border}`,
+                            borderRadius: 8, padding: "10px 16px", marginBottom: 16,
                             fontSize: 11, color: C.textMuted, lineHeight: 1.7,
                         }}>
                             <strong style={{ color: C.textSecond }}>Formula:</strong>{" "}
-                            biological age = chronological age + δ, where δ is derived from how far the client's overall score deviates from the population median.
+                            biological age = chronological age + δ, where δ is derived from how far the individual's overall score deviates from the population median.
                             Penalty (below median): δ = +20 · x<sup>0.75</sup> — felt quickly.
                             Benefit (above median): δ = −20 · x<sup>1.5</sup> — earned slowly.
                             x is the normalised distance from the median (0 → 1).
                         </div>
 
                         {/* Table */}
-                        <div style={{ background: C.surface, borderRadius: 10, border: `1px solid ${C.border}`, overflow: "auto" }}>
+                        <div style={{ background: C.surface, borderRadius: 8, border: `1px solid ${C.border}`, overflow: "auto" }}>
                             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900 }}>
                                 <thead>
-                                    <tr style={{ background: "#F2F8FB" }}>
-                                        <Th style={{ textAlign: "left", width: 200 }}>Client</Th>
+                                    <tr style={{ background: C.surfaceAlt }}>
+                                        <Th style={{ textAlign: "left", width: 200 }}>Individual</Th>
                                         <Th style={{ width: 80 }}>Age</Th>
                                         <Th style={{ width: 110 }}>Overall score</Th>
                                         <Th style={{ width: 100 }}>Biological age</Th>
@@ -440,12 +457,12 @@ export default function App() {
                                     {scoredClients.map((client, ri) => {
                                         const age = ages[client.id] !== undefined && ages[client.id] !== "" ? Number(ages[client.id]) : null;
                                         const result = computeBioAge(client.overall, age, populationMedian);
-                                        const rowBg = ri % 2 === 0 ? C.surface : "#F7FAFC";
+                                        const rowBg = ri % 2 === 0 ? C.surface : C.surfaceAlt;
                                         return (
                                             <tr key={client.id} style={{ background: rowBg, borderTop: `1px solid ${C.border}` }}>
-                                                {/* Client */}
+                                                {/* ID */}
                                                 <td style={{ padding: "10px 16px" }}>
-                                                    <div style={{ fontFamily: T.mono, fontSize: 11, color: C.textSecond, fontWeight: 600 }}>
+                                                    <div style={{ fontFamily: T.mono, fontSize: 11, color: C.textSecond, fontWeight: 500 }}>
                                                         {client.label}
                                                     </div>
                                                     <div style={{ fontSize: 10, color: C.textFaint, marginTop: 2 }}>
@@ -473,8 +490,8 @@ export default function App() {
                                                 {/* Overall score */}
                                                 <td style={{ padding: "10px 8px", textAlign: "center" }}>
                                                     {client.overall != null ? (
-                                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                                                            <span style={{ fontFamily: T.mono, fontWeight: 700, fontSize: 14, color: scoreColour(client.overall) }}>
+                                                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 5 }}>
+                                                            <span style={{ fontFamily: T.mono, fontWeight: 600, fontSize: 13, color: scoreColour(client.overall) }}>
                                                                 {client.overall.toFixed(1)}
                                                             </span>
                                                             <ScoreBar score={client.overall} width={72} />
@@ -486,8 +503,8 @@ export default function App() {
                                                 <td style={{ padding: "10px 8px", textAlign: "center" }}>
                                                     {result ? (
                                                         <span style={{
-                                                            fontFamily: T.display, fontWeight: 700,
-                                                            fontSize: 16, color: result.delta > 0 ? C.critical : C.tealDark,
+                                                            fontFamily: T.mono, fontWeight: 700,
+                                                            fontSize: 15, color: result.delta > 0 ? C.critical : C.good,
                                                         }}>
                                                             {result.bioAge.toFixed(1)}
                                                         </span>
@@ -508,7 +525,7 @@ export default function App() {
                                                     <td key={sys.id} style={{ padding: "10px 4px", textAlign: "center" }}>
                                                         {sys.score != null ? (
                                                             <span style={{
-                                                                fontFamily: T.mono, fontSize: 11, fontWeight: 600,
+                                                                fontFamily: T.mono, fontSize: 11, fontWeight: 500,
                                                                 color: scoreColour(sys.score),
                                                             }}>
                                                                 {Math.floor(sys.score)}
@@ -543,21 +560,21 @@ export default function App() {
 function Stat({ label, value }) {
     return (
         <div>
-            <div style={{ fontSize: 10, color: C.textFaint, textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 2 }}>{label}</div>
-            <div style={{ fontFamily: T.mono, fontWeight: 700, fontSize: 16, color: C.textPrimary }}>{value}</div>
+            <div style={{ fontSize: 10, color: C.textFaint, textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 3 }}>{label}</div>
+            <div style={{ fontFamily: T.mono, fontWeight: 600, fontSize: 15, color: C.textPrimary }}>{value}</div>
         </div>
     );
 }
 
 function Divider() {
-    return <div style={{ width: 1, height: 32, background: C.border }} />;
+    return <div style={{ width: 1, height: 28, background: C.border }} />;
 }
 
 function Th({ children, style, title }) {
     return (
         <th title={title} style={{
-            padding: "10px 8px", fontSize: 10, fontWeight: 700, color: C.textMuted,
-            textTransform: "uppercase", letterSpacing: "0.1em", textAlign: "center",
+            padding: "10px 8px", fontSize: 10, fontWeight: 600, color: C.textFaint,
+            textTransform: "uppercase", letterSpacing: "0.07em", textAlign: "center",
             borderBottom: `1px solid ${C.border}`, ...style,
         }}>
             {children}
