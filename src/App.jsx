@@ -283,11 +283,11 @@ function UploadZone({ onFile }) {
         >
             <div style={{ fontSize: 32, marginBottom: 12 }}>⬆</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: C.textPrimary, marginBottom: 6 }}>
-                Upload client CSV
+                Drop or click to upload a CSV
             </div>
             <div style={{ fontSize: 12, color: C.textMuted, lineHeight: 1.6 }}>
-                Same format as the scoring workbench.<br />
-                Columns: <code style={{ fontFamily: T.mono, fontSize: 11 }}>is_reported, my_id, barcode, measure_name, lab_concentration, lower_reference_range, upper_reference_range</code>
+                Required columns:<br />
+                <code style={{ fontFamily: T.mono, fontSize: 11 }}>is_reported, my_id, barcode, measure_name, lab_concentration, lower_reference_range, upper_reference_range</code>
             </div>
             <input ref={inputRef} type="file" accept=".csv" style={{ display: "none" }}
                 onChange={e => { const f = e.target.files[0]; if (f) onFile(f); }} />
@@ -345,11 +345,10 @@ export default function App() {
     return (
         <div style={{ minHeight: "100vh", background: "#EEF4F7" }}>
             {/* Header */}
-            <div style={{ background: C.navy, padding: "18px 32px", display: "flex", alignItems: "baseline", gap: 16 }}>
+            <div style={{ background: C.navy, padding: "18px 32px", display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ fontFamily: T.display, fontSize: 20, color: C.teal, letterSpacing: "0.02em" }}>
                     Biological Age Explorer
                 </div>
-                <div style={{ fontSize: 12, color: C.steel }}>R&D · Molecular You</div>
                 {fileName && (
                     <div style={{ marginLeft: "auto", fontSize: 11, color: C.steel, fontFamily: T.mono }}>
                         {fileName}
@@ -362,11 +361,11 @@ export default function App() {
                     <div style={{ paddingTop: 64 }}>
                         <div style={{ textAlign: "center", marginBottom: 32 }}>
                             <div style={{ fontFamily: T.display, fontSize: 22, color: C.navy, marginBottom: 8 }}>
-                                Load client data to begin
+                                Load data to begin
                             </div>
                             <div style={{ fontSize: 13, color: C.textMuted, maxWidth: 420, margin: "0 auto" }}>
-                                Scores are computed from the 7 body health systems using default scoring parameters.
-                                Biological age is derived from each client's overall score relative to the population median.
+                                Scores are computed across 7 body health systems.
+                                Biological age is derived from each individual's overall score relative to the population median.
                             </div>
                         </div>
                         <UploadZone onFile={handleFile} />
