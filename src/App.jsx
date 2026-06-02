@@ -152,10 +152,10 @@ function computeBioAge(overall, age, median) {
     let delta;
     if (overall >= median) {
         const x = (overall - median) / Math.max(100 - median, 0.001);
-        delta = -MAX_DELTA * Math.pow(x, 1.5);
+        delta = -MAX_DELTA * x;
     } else {
         const x = (median - overall) / Math.max(median, 0.001);
-        delta = MAX_DELTA * Math.pow(x, 0.75);
+        delta = MAX_DELTA * x;
     }
     return { bioAge: age + delta, delta };
 }
@@ -432,10 +432,8 @@ export default function App() {
                             fontSize: 11, color: C.textMuted, lineHeight: 1.7,
                         }}>
                             <strong style={{ color: C.textSecond }}>Formula:</strong>{" "}
-                            biological age = chronological age + δ, where δ is derived from how far the individual's overall score deviates from the population median.
-                            Penalty (below median): δ = +15 · x<sup>0.75</sup> — felt quickly.
-                            Benefit (above median): δ = −15 · x<sup>1.5</sup> — earned slowly.
-                            x is the normalised distance from the median (0 → 1).
+                            biological age = chronological age + δ, where δ = ±15 · x and x is the normalised distance from the population median (0 → 1).
+                            Symmetric: equal penalty below and benefit above the median.
                         </div>
 
                         {/* Table */}
@@ -495,6 +493,11 @@ export default function App() {
                                                                 {client.overall.toFixed(1)}
                                                             </span>
                                                             <ScoreBar score={client.overall} width={72} />
+                                                            {populationMedian != null && (
+                                                                <span style={{ fontFamily: T.mono, fontSize: 10, color: C.textFaint }}>
+                                                                    {client.overall >= populationMedian ? "+" : ""}{(client.overall - populationMedian).toFixed(1)} vs median
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     ) : <span style={{ color: C.textFaint, fontSize: 12 }}>—</span>}
                                                 </td>
