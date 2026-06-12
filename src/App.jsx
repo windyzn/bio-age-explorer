@@ -152,10 +152,10 @@ function computeBioAge(overall, age, median) {
     let delta;
     if (overall >= median) {
         const x = (overall - median) / Math.max(100 - median, 0.001);
-        delta = -MAX_DELTA * x;
+        delta = -MAX_DELTA * Math.sqrt(x);
     } else {
         const x = (median - overall) / Math.max(median, 0.001);
-        delta = MAX_DELTA * x;
+        delta = MAX_DELTA * Math.sqrt(x);
     }
     const bioAge = Math.max(18, Math.min(100, age + delta));
     return { bioAge, delta: bioAge - age };
@@ -433,8 +433,9 @@ export default function App() {
                             fontSize: 11, color: C.textMuted, lineHeight: 1.7,
                         }}>
                             <strong style={{ color: C.textSecond }}>Formula:</strong>{" "}
-                            biological age = chronological age + δ, where δ = ±15 · x and x is the normalised distance from the population median (0 → 1).
-                            Symmetric: equal penalty below and benefit above the median.
+                            biological age = chronological age + δ, clamped to [18, 100].
+                            δ = ±15 · √x, where x is the normalised distance from the population median (0 → 1).
+                            Symmetric above and below median. Change is rapid near the median and slows toward the ±15 year limit.
                         </div>
 
                         {/* Table */}
