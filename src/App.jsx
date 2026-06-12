@@ -157,7 +157,8 @@ function computeBioAge(overall, age, median) {
         const x = (median - overall) / Math.max(median, 0.001);
         delta = MAX_DELTA * x;
     }
-    return { bioAge: age + delta, delta };
+    const bioAge = Math.max(18, Math.min(100, age + delta));
+    return { bioAge, delta: bioAge - age };
 }
 
 // ─── CSV parsing (same format as scoring workbench) ───────────────────────────
